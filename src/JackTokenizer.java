@@ -42,6 +42,10 @@ public class JackTokenizer {
             return identifier();
         }
 
+        if (c == '"') {
+            return string();
+        }
+        
         if (SYMBOLS.contains(c)) {
             return symbol();
         }
@@ -85,6 +89,27 @@ public class JackTokenizer {
         pos++;
         return new Token("symbol", String.valueOf(c), line);
     }
+
+    private Token string() {
+        pos++; // pula a aspas de abertura
+        int start = pos;
+        while (pos < src.length() && src.charAt(pos) != '"') {
+            if (src.charAt(pos) == '\n') {
+                throw new RuntimeException(
+                    "String nao terminada na linha " + line
+                );
+            }
+            pos++;
+        }
+        if (pos >= src.length()) {
+            throw new RuntimeException(
+                "String nao terminada (fim de arquivo) na linha " + line
+            );
+        }
+        String lexeme = src.substring(start, pos);
+        pos++; // pula a aspas de fechamento
+        return new Token("stringConstant", lexeme, line);
+}
 
     // ==========================================================
     // Utilidades
