@@ -1,8 +1,14 @@
+import java.util.Set;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class JackTokenizer {
+    private static final Set<String> KEYWORDS = Set.of(
+        "class", "constructor", "function", "method", "field", "static",
+        "var", "int", "char", "boolean", "void", "true", "false", "null",
+        "this", "let", "do", "if", "else", "while", "return"
+    );
 
     private final String src;      // conteúdo do arquivo
     private int pos;               // posição atual
@@ -62,7 +68,9 @@ public class JackTokenizer {
             }
         }
         String lexeme = src.substring(start, pos);
-        return new Token("identifier", lexeme, line);
+
+        String type = KEYWORDS.contains(lexeme) ? "keyword" : "identifier";
+        return new Token(type, lexeme, line);
     }
 
     // ==========================================================
