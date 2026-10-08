@@ -9,6 +9,10 @@ public class JackTokenizer {
         "var", "int", "char", "boolean", "void", "true", "false", "null",
         "this", "let", "do", "if", "else", "while", "return"
     );
+    private static final Set<Character> SYMBOLS = Set.of(
+    '{', '}', '(', ')', '[', ']', '.', ',', ';',
+    '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
+    );
 
     private final String src;      // conteúdo do arquivo
     private int pos;               // posição atual
@@ -38,7 +42,10 @@ public class JackTokenizer {
             return identifier();
         }
 
-        // Se cair aqui, é um caractere que ainda não reconhecemos.
+        if (SYMBOLS.contains(c)) {
+            return symbol();
+        }
+
         throw new RuntimeException(
             "Caractere inesperado '" + c + "' na linha " + line
         );
@@ -71,6 +78,12 @@ public class JackTokenizer {
 
         String type = KEYWORDS.contains(lexeme) ? "keyword" : "identifier";
         return new Token(type, lexeme, line);
+    }
+
+    private Token symbol() {
+        char c = src.charAt(pos);
+        pos++;
+        return new Token("symbol", String.valueOf(c), line);
     }
 
     // ==========================================================
