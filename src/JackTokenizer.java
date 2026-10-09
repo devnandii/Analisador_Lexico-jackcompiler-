@@ -3,6 +3,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+
 public class JackTokenizer {
     private static final Set<String> KEYWORDS = Set.of(
         "class", "constructor", "function", "method", "field", "static",
@@ -44,6 +45,10 @@ public class JackTokenizer {
 
         if (c == '"') {
             return string();
+        }
+        
+        if (c == '/') {
+            return slashOrComment();
         }
         
         if (SYMBOLS.contains(c)) {
@@ -109,7 +114,53 @@ public class JackTokenizer {
         String lexeme = src.substring(start, pos);
         pos++; // pula a aspas de fechamento
         return new Token("stringConstant", lexeme, line);
-}
+    }
+
+    private Token slashOrComment() {
+    char next = peekNext();
+
+    // Comentário de linha: //
+    if (next == '/') {
+        pos += 2;
+        while (pos < src.length() && src.charAt(pos) != '\n') {
+            pos++;
+        }
+        return nextToken(); // ignora o comentário e tenta de novo
+    }
+
+    // Comentário de bloco: /* ... */
+    if (next == '*') {
+        pos += 2;
+        while (pos + 1 < src.length()
+                && !(src.charAt(pos) == '*' && src.charAt(pos + 1) == '/')) {
+            if (src.charAt(pos) == '\n') {
+                line++;
+            }
+            pos++;
+        }
+        if (pos + 1 >= src.length()) {
+            throw new RuntimeException(
+                "Comentario de bloco nao fechado (fim de arquivo)"
+            );
+        }
+        pos += 2; // pula o */
+        return nextToken();
+    }
+
+    // Divisão normal: emite o símbolo '/'
+    pos++;
+    return new Token("symbol", "/", line);
+    }
+
+    private char peekNext() {
+    int next = pos + 1;
+    if (next >= src.length()) {
+        return '\0';
+    }
+    return src.charAt(next);
+    }
+
+    
 
     // ==========================================================
     // Utilidades
