@@ -1,0 +1,89 @@
+From eaf2074a3991d6d2f4d17e3779071a858d6d825a Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:04 +0000
+Subject: [PATCH 01/10] =?UTF-8?q?refactor:=20modelar=20tokens=20com=20tipo?=
+ =?UTF-8?q?=20e=20posi=C3=A7=C3=A3o=20de=20origem?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/Token.java | 58 ++++++++++++++++++++++++++++++++++++++++++++------
+ 1 file changed, 51 insertions(+), 7 deletions(-)
+
+diff --git a/src/Token.java b/src/Token.java
+index 5d455b0..9a38258 100644
+--- a/src/Token.java
++++ b/src/Token.java
+@@ -1,16 +1,60 @@
+-public class Token {
+-    public final String type;    // "identifier", etc.
+-    public final String lexeme;  // o texto reconhecido
+-    public final int line;       // linha onde o token começou
++import java.util.Map;
+ 
+-    public Token(String type, String lexeme, int line) {
++/**
++ * Representa um token reconhecido pelo analisador léxico.
++ * O lexema de stringConstant não inclui as aspas delimitadoras.
++ */
++public final class Token {
++    public enum Type {
++        KEYWORD("keyword"),
++        SYMBOL("symbol"),
++        IDENTIFIER("identifier"),
++        INT_CONST("integerConstant"),
++        STRING_CONST("stringConstant");
++
++        private final String xmlName;
++
++        Type(String xmlName) {
++            this.xmlName = xmlName;
++        }
++
++        public String xmlName() {
++            return xmlName;
++        }
++    }
++
++    private final Type type;
++    private final String lexeme;
++    private final int line;
++    private final int column;
++
++    public Token(Type type, String lexeme, int line, int column) {
+         this.type = type;
+         this.lexeme = lexeme;
+         this.line = line;
++        this.column = column;
++    }
++
++    public Type getType() { return type; }
++    public String getLexeme() { return lexeme; }
++    public int getLine() { return line; }
++    public int getColumn() { return column; }
++
++    /** Escapa caracteres reservados em conteúdo XML. */
++    public String toXmlLine() {
++        return "<" + type.xmlName() + "> " + escapeXml(lexeme)
++                + " </" + type.xmlName() + ">";
++    }
++
++    public static String escapeXml(String value) {
++        return value.replace("&", "&amp;")
++                    .replace("<", "&lt;")
++                    .replace(">", "&gt;")
++                    .replace("\"", "&quot;");
+     }
+ 
+     @Override
+     public String toString() {
+-        return "<" + type + "> " + lexeme + " </" + type + ">";
++        return type.xmlName() + "('" + lexeme + "') at " + line + ":" + column;
+     }
+-}
+\ No newline at end of file
++}
+-- 
+2.47.3
+
