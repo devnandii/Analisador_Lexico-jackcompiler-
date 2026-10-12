@@ -1,0 +1,40 @@
+From a6fae29fd988a581b3b018f09b3a2e3076b3e561 Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:06 +0000
+Subject: [PATCH 08/10] =?UTF-8?q?docs:=20explicar=20estrat=C3=A9gia=20de?=
+ =?UTF-8?q?=20testes=20de=20regress=C3=A3o?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.md | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
+
+diff --git a/README.md b/README.md
+index 30fd6f7..3dcdcfd 100644
+--- a/README.md
++++ b/README.md
+@@ -52,3 +52,19 @@ O XML contém `<tokens>` e `</tokens>`, uma linha por token, espaços internos n
+ - Espaços, tabs, quebras de linha e comentários `//` e `/* ... */` são ignorados.
+ - Erros léxicos indicam linha e coluna para facilitar a depuração.
+ 
++## Estratégia de testes e justificativa
++
++A estratégia combina comparação de saída e testes de casos-limite:
++
++1. **Comparação diferencial com os arquivos oficiais**: `scripts/test.sh` compila o projeto, gera o XML de `Main.jack`, `Square.jack` e `SquareGame.jack` e compara byte a byte (`diff -u`) com os arquivos de referência em `test/expected_xml/`. Isso verifica a sequência, o tipo, o lexema e a formatação de cada token, não apenas a quantidade.
++2. **Casos de borda automatizados**: o mesmo script verifica símbolos que precisam de escape XML, comentários de linha/bloco, strings, identificadores, limites de inteiros e erros esperados (string não terminada, comentário não fechado, caractere inválido e inteiro acima do limite).
++3. **Falha explícita**: o script encerra com código diferente de zero se compilação, execução ou comparação falhar.
++
++Execute todos os testes na raiz:
++
++```bash
++bash scripts/test.sh
++```
++
++Os arquivos `test/expected_xml/*T.xml` devem ser mantidos como referências oficiais, sem edição manual para acomodar a saída do scanner.
++
+-- 
+2.47.3
+

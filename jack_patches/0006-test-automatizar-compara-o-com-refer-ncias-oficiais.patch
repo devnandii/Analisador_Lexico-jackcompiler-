@@ -1,0 +1,37 @@
+From e3b3e194869f97d39fc3c54fb5b297db7126619c Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:06 +0000
+Subject: [PATCH 06/10] =?UTF-8?q?test:=20automatizar=20compara=C3=A7=C3=A3?=
+ =?UTF-8?q?o=20com=20refer=C3=AAncias=20oficiais?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ scripts/test.sh | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+ create mode 100755 scripts/test.sh
+
+diff --git a/scripts/test.sh b/scripts/test.sh
+new file mode 100755
+index 0000000..508b0e6
+--- /dev/null
++++ b/scripts/test.sh
+@@ -0,0 +1,14 @@
++#!/usr/bin/env bash
++set -euo pipefail
++ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
++cd "$ROOT"
++rm -rf bin
++mkdir -p bin
++javac -encoding UTF-8 -d bin src/*.java
++echo "[1/1] Comparando XML com as referências oficiais..."
++for name in Main Square SquareGame; do
++  java -cp bin Main --xml "test/jack_files/${name}.jack" -o "bin/${name}T.xml"
++  diff -u "test/expected_xml/${name}T.xml" "bin/${name}T.xml"
++  echo "  OK: ${name}.jack"
++done
++echo "Todos os testes passaram."
+-- 
+2.47.3
+

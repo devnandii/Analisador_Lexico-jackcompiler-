@@ -1,0 +1,41 @@
+From 21f57a09b174c3031fb0b0000f7ca0bc40a56438 Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:06 +0000
+Subject: [PATCH 10/10] =?UTF-8?q?docs:=20documentar=20estrutura=20e=20pr?=
+ =?UTF-8?q?=C3=B3ximos=20m=C3=B3dulos=20do=20compilador?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.md | 17 +++++++++++++++++
+ 1 file changed, 17 insertions(+)
+
+diff --git a/README.md b/README.md
+index 3dcdcfd..cf2fc11 100644
+--- a/README.md
++++ b/README.md
+@@ -68,3 +68,20 @@ bash scripts/test.sh
+ 
+ Os arquivos `test/expected_xml/*T.xml` devem ser mantidos como referências oficiais, sem edição manual para acomodar a saída do scanner.
+ 
++## Estrutura
++
++```text
++src/
++  Main.java           # CLI e saída de tokens/XML
++  JackTokenizer.java  # reconhecimento léxico
++  Token.java          # representação de token e escape XML
++test/
++  jack_files/         # entradas oficiais
++  expected_xml/       # saídas esperadas oficiais
++  unit/               # entradas auxiliares para casos de borda
++scripts/
++  test.sh             # compilação e testes de regressão
++```
++
++## Limitações e próxima etapa
++Este projeto cobre a análise léxica; não valida a gramática nem a semântica do programa Jack. O próximo módulo pode consumir `List<Token>` diretamente, sem precisar analisar novamente a representação textual produzida pela CLI.
+-- 
+2.47.3
+

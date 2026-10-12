@@ -1,0 +1,33 @@
+From 32eb0bccbf462b078a8cbb75b8572eb0f9f8a39d Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:06 +0000
+Subject: [PATCH 05/10] =?UTF-8?q?docs:=20descrever=20tipos=20de=20tokens?=
+ =?UTF-8?q?=20e=20regras=20l=C3=A9xicas?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ README.md | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/README.md b/README.md
+index c7ba68e..30fd6f7 100644
+--- a/README.md
++++ b/README.md
+@@ -43,3 +43,12 @@ java -cp bin Main --xml -o bin/MainT.xml test/jack_files/Main.jack
+ 
+ O XML contém `<tokens>` e `</tokens>`, uma linha por token, espaços internos nas tags e escape XML de `&`, `<`, `>`, e aspas. Não há token EOF na saída. O conteúdo das `stringConstant` não inclui as aspas delimitadoras.
+ 
++## Tokens e regras reconhecidas
++- `keyword`: palavras reservadas de Jack.
++- `symbol`: os 19 símbolos definidos pela linguagem.
++- `integerConstant`: inteiros decimais no intervalo `0..32767`.
++- `stringConstant`: texto entre aspas duplas, sem as aspas; não pode atravessar linhas.
++- `identifier`: identificadores iniciados por letra ASCII ou `_`, seguidos por letras ASCII, dígitos ou `_`.
++- Espaços, tabs, quebras de linha e comentários `//` e `/* ... */` são ignorados.
++- Erros léxicos indicam linha e coluna para facilitar a depuração.
++
+-- 
+2.47.3
+

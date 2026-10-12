@@ -1,0 +1,116 @@
+From 15345efbeb498220e4e1912c69c2dff2087160b6 Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:04 +0000
+Subject: [PATCH 03/10] =?UTF-8?q?feat:=20adicionar=20interface=20CLI=20e?=
+ =?UTF-8?q?=20sa=C3=ADda=20XML?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ src/Main.java | 84 ++++++++++++++++++++++++++++++++++++++++++++-------
+ 1 file changed, 73 insertions(+), 11 deletions(-)
+
+diff --git a/src/Main.java b/src/Main.java
+index d524754..f7a7405 100644
+--- a/src/Main.java
++++ b/src/Main.java
+@@ -1,21 +1,83 @@
+ import java.io.IOException;
++import java.nio.charset.StandardCharsets;
++import java.nio.file.Files;
++import java.nio.file.Path;
++import java.util.List;
++
++/** Ponto de entrada da aplicação. */
++public final class Main {
++    private Main() {}
+ 
+-public class Main {
+     public static void main(String[] args) {
+-        if (args.length != 1) {
+-            System.err.println("Uso: java -cp src Main <arquivo.jack>");
+-            System.exit(1);
++        boolean xml = false;
++        String input = null;
++        String output = null;
++
++        for (int i = 0; i < args.length; i++) {
++            switch (args[i]) {
++                case "--xml":
++                    xml = true;
++                    break;
++                case "-o":
++                case "--output":
++                    if (i + 1 >= args.length) {
++                        usage("Informe um caminho após " + args[i]);
++                        return;
++                    }
++                    output = args[++i];
++                    break;
++                case "-h":
++                case "--help":
++                    usage(null);
++                    return;
++                default:
++                    if (args[i].startsWith("-")) {
++                        usage("Opção desconhecida: " + args[i]);
++                        return;
++                    }
++                    if (input != null) {
++                        usage("Informe apenas um arquivo de entrada.");
++                        return;
++                    }
++                    input = args[i];
++            }
++        }
++
++        if (input == null) {
++            usage("Arquivo .jack não informado.");
++            return;
+         }
+ 
+         try {
+-            JackTokenizer tok = new JackTokenizer(args[0]);
+-            Token t;
+-            while ((t = tok.nextToken()) != null) {
+-                System.out.println(t);
++            List<Token> tokens = new JackTokenizer(Path.of(input)).tokenize();
++            String result = xml ? toXml(tokens) : toText(tokens);
++            if (output == null) {
++                System.out.print(result);
++            } else {
++                Files.writeString(Path.of(output), result, StandardCharsets.UTF_8);
+             }
+-        } catch (IOException e) {
+-            System.err.println("Erro ao ler arquivo: " + e.getMessage());
++        } catch (IOException | IllegalArgumentException ex) {
++            System.err.println("Erro: " + ex.getMessage());
+             System.exit(1);
+         }
+     }
+-}
+\ No newline at end of file
++
++    private static String toXml(List<Token> tokens) {
++        StringBuilder result = new StringBuilder("<tokens>\n");
++        for (Token token : tokens) result.append(token.toXmlLine()).append('\n');
++        return result.append("</tokens>\n").toString();
++    }
++
++    private static String toText(List<Token> tokens) {
++        StringBuilder result = new StringBuilder();
++        for (Token token : tokens) result.append(token).append('\n');
++        return result.toString();
++    }
++
++    private static void usage(String error) {
++        if (error != null) System.err.println(error);
++        System.err.println("Uso: java -cp bin Main [--xml] [-o arquivo-saida] <arquivo.jack>");
++        System.err.println("  --xml              gera XML no formato nand2tetris");
++        System.err.println("  -o, --output ARQ   grava a saída no arquivo indicado");
++    }
++}
+-- 
+2.47.3
+

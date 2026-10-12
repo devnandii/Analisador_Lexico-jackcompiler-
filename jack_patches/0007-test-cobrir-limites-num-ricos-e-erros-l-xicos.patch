@@ -1,0 +1,83 @@
+From 10849aad7f658fa3ab5d4e9bfcfafb8bfc95d319 Mon Sep 17 00:00:00 2001
+From: JackCompiler Update <jackcompiler-update@example.invalid>
+Date: Mon, 12 Oct 2026 19:09:06 +0000
+Subject: [PATCH 07/10] =?UTF-8?q?test:=20cobrir=20limites=20num=C3=A9ricos?=
+ =?UTF-8?q?=20e=20erros=20l=C3=A9xicos?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+---
+ scripts/test.sh | 50 ++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 49 insertions(+), 1 deletion(-)
+
+diff --git a/scripts/test.sh b/scripts/test.sh
+index 508b0e6..3f053bf 100755
+--- a/scripts/test.sh
++++ b/scripts/test.sh
+@@ -2,13 +2,61 @@
+ set -euo pipefail
+ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ cd "$ROOT"
++
+ rm -rf bin
+ mkdir -p bin
+ javac -encoding UTF-8 -d bin src/*.java
+-echo "[1/1] Comparando XML com as referências oficiais..."
++
++echo "[1/2] Comparando XML com as referências oficiais..."
+ for name in Main Square SquareGame; do
+   java -cp bin Main --xml "test/jack_files/${name}.jack" -o "bin/${name}T.xml"
+   diff -u "test/expected_xml/${name}T.xml" "bin/${name}T.xml"
+   echo "  OK: ${name}.jack"
+ done
++
++echo "[2/2] Testando casos de borda..."
++tmp="$(mktemp -d)"
++trap 'rm -rf "$tmp"' EXIT
++
++cat > "$tmp/valid.jack" <<'JACK'
++class _A9 { // comentário de linha
++  function void f() {
++    let x = 32767;
++    let flag = a < b & c > d;
++    let s = "<&>";
++    /* comentário
++       de bloco */
++    do Output.printString(s);
++    return;
++  }
++}
++JACK
++java -cp bin Main --xml "$tmp/valid.jack" -o "$tmp/valid.xml"
++grep -q '<symbol> &lt; </symbol>' "$tmp/valid.xml"
++grep -q '<symbol> &amp; </symbol>' "$tmp/valid.xml"
++grep -q '<symbol> &gt; </symbol>' "$tmp/valid.xml"
++grep -q '<stringConstant> &lt;&amp;&gt; </stringConstant>' "$tmp/valid.xml"
++grep -q '<integerConstant> 32767 </integerConstant>' "$tmp/valid.xml"
++
++expect_failure() {
++  local source="$1"
++  local expected="$2"
++  printf '%s' "$source" > "$tmp/invalid.jack"
++  if java -cp bin Main "$tmp/invalid.jack" >"$tmp/out.txt" 2>"$tmp/err.txt"; then
++    echo "ERRO: entrada inválida foi aceita: $source" >&2
++    exit 1
++  fi
++  if ! grep -q "$expected" "$tmp/err.txt"; then
++    echo "ERRO: mensagem esperada '$expected'; recebido:" >&2
++    cat "$tmp/err.txt" >&2
++    exit 1
++  fi
++}
++expect_failure 'let x = 32768;' 'fora do intervalo'
++expect_failure 'let x = "sem fim' 'sem aspas de fechamento'
++expect_failure '/* comentário sem fim' 'linha 1, coluna 1'
++expect_failure 'let x = @;' 'Caractere'
++expect_failure 'let x = "linha
++seguinte";' 'atravessar linhas'
++
+ echo "Todos os testes passaram."
+-- 
+2.47.3
+
