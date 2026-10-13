@@ -1,33 +1,38 @@
-import java.util.Set;
+
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-
+import java.util.Set;
 
 public class JackTokenizer {
+
     private static final Set<String> KEYWORDS = Set.of(
         "class", "constructor", "function", "method", "field", "static",
         "var", "int", "char", "boolean", "void", "true", "false", "null",
         "this", "let", "do", "if", "else", "while", "return"
     );
+
     private static final Set<Character> SYMBOLS = Set.of(
-    '{', '}', '(', ')', '[', ']', '.', ',', ';',
-    '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
+        '{', '}', '(', ')', '[', ']', '.', ',', ';',
+        '+', '-', '*', '/', '&', '|', '<', '>', '=', '~'
     );
 
-    private final String src;      // conteúdo do arquivo
-    private int pos;               // posição atual
-    private int line;              // linha atual (1-based)
+    private final String src;
+    private int pos;
+    private int line;
 
     public JackTokenizer(String filePath) throws IOException {
-        this.src = new String(Files.readAllBytes(Paths.get(filePath)));
+        this.src = new String(
+            Files.readAllBytes(Paths.get(filePath)),
+            StandardCharsets.UTF_8
+        );
         this.pos = 0;
         this.line = 1;
     }
 
-    /** Retorna o próximo token ou null se acabou o arquivo. */
     public Token nextToken() {
-        skipWhitespace();
+        skipWhitespaceAndComments();
 
         if (pos >= src.length()) {
             return null;
@@ -35,24 +40,21 @@ public class JackTokenizer {
 
         char c = src.charAt(pos);
 
-        if (Character.isDigit(c)) {
+        if (isDigit(c)) {
             return number();
         }
 
-        if (Character.isLetter(c) || c == '_') {
+        if (isLetter(c)) {
             return identifier();
         }
 
         if (c == '"') {
             return string();
         }
-        
-        if (c == '/') {
-            return slashOrComment();
-        }
-        
+
         if (SYMBOLS.contains(c)) {
-            return symbol();
+            pos++;
+            return new Token("symbol", String.valueOf(c), line);
         }
 
         throw new RuntimeException(
@@ -60,123 +62,151 @@ public class JackTokenizer {
         );
     }
 
-    // ==========================================================
-    // Reconhecedores
-    // ==========================================================
-
     private Token number() {
         int start = pos;
-        while (pos < src.length() && Character.isDigit(src.charAt(pos))) {
+
+        while (pos < src.length() && isDigit(src.charAt(pos))) {
             pos++;
         }
+
         String lexeme = src.substring(start, pos);
+
+        try {
+            long value = Long.parseLong(lexeme);
+
+            if (value > 32767) {
+                throw new RuntimeException(
+                    "Inteiro fora do intervalo 0 a 32767 na linha "
+                    + line + ": " + lexeme
+                );
+            }
+        } catch (NumberFormatException e) {
+            throw new RuntimeException(
+                "Constante inteira invalida na linha " + line
+            );
+        }
+
         return new Token("integerConstant", lexeme, line);
     }
 
     private Token identifier() {
         int start = pos;
-        while (pos < src.length()) {
-            char c = src.charAt(pos);
-            if (Character.isLetterOrDigit(c) || c == '_') {
-                pos++;
-            } else {
-                break;
-            }
+        pos++;
+
+        while (pos < src.length() && isIdentifierPart(src.charAt(pos))) {
+            pos++;
         }
+
         String lexeme = src.substring(start, pos);
 
-        String type = KEYWORDS.contains(lexeme) ? "keyword" : "identifier";
+        String type = KEYWORDS.contains(lexeme)
+                ? "keyword"
+                : "identifier";
+
         return new Token(type, lexeme, line);
     }
 
-    private Token symbol() {
-        char c = src.charAt(pos);
-        pos++;
-        return new Token("symbol", String.valueOf(c), line);
-    }
-
     private Token string() {
-        pos++; // pula a aspas de abertura
+        int startLine = line;
+
+        pos++; // Aspas de abertura
         int start = pos;
+
         while (pos < src.length() && src.charAt(pos) != '"') {
-            if (src.charAt(pos) == '\n') {
+            char c = src.charAt(pos);
+
+            if (c == '\n' || c == '\r') {
                 throw new RuntimeException(
-                    "String nao terminada na linha " + line
+                    "String nao terminada na linha " + startLine
                 );
             }
+
             pos++;
         }
+
         if (pos >= src.length()) {
             throw new RuntimeException(
-                "String nao terminada (fim de arquivo) na linha " + line
+                "String nao terminada no fim do arquivo, linha "
+                + startLine
             );
         }
+
         String lexeme = src.substring(start, pos);
-        pos++; // pula a aspas de fechamento
-        return new Token("stringConstant", lexeme, line);
+        pos++; // Aspas de fechamento
+
+        return new Token("stringConstant", lexeme, startLine);
     }
 
-    private Token slashOrComment() {
-    char next = peekNext();
+    private void skipWhitespaceAndComments() {
+        boolean skipping = true;
 
-    // Comentário de linha: //
-    if (next == '/') {
-        pos += 2;
-        while (pos < src.length() && src.charAt(pos) != '\n') {
-            pos++;
-        }
-        return nextToken(); // ignora o comentário e tenta de novo
-    }
+        while (skipping) {
+            skipping = false;
 
-    // Comentário de bloco: /* ... */
-    if (next == '*') {
-        pos += 2;
-        while (pos + 1 < src.length()
-                && !(src.charAt(pos) == '*' && src.charAt(pos + 1) == '/')) {
-            if (src.charAt(pos) == '\n') {
-                line++;
+            while (pos < src.length()
+                    && Character.isWhitespace(src.charAt(pos))) {
+                if (src.charAt(pos) == '\n') {
+                    line++;
+                }
+                pos++;
             }
-            pos++;
-        }
-        if (pos + 1 >= src.length()) {
-            throw new RuntimeException(
-                "Comentario de bloco nao fechado (fim de arquivo)"
-            );
-        }
-        pos += 2; // pula o */
-        return nextToken();
-    }
 
-    // Divisão normal: emite o símbolo '/'
-    pos++;
-    return new Token("symbol", "/", line);
-    }
+            if (pos + 1 < src.length()
+                    && src.charAt(pos) == '/'
+                    && src.charAt(pos + 1) == '/') {
 
-    private char peekNext() {
-    int next = pos + 1;
-    if (next >= src.length()) {
-        return '\0';
-    }
-    return src.charAt(next);
-    }
+                pos += 2;
 
-    
+                while (pos < src.length()
+                        && src.charAt(pos) != '\n') {
+                    pos++;
+                }
 
-    // ==========================================================
-    // Utilidades
-    // ==========================================================
+                skipping = true;
 
-    private void skipWhitespace() {
-        while (pos < src.length()) {
-            char c = src.charAt(pos);
-            if (c == '\n') {
-                line++;
-                pos++;
-            } else if (Character.isWhitespace(c)) {
-                pos++;
-            } else {
-                break;
+            } else if (pos + 1 < src.length()
+                    && src.charAt(pos) == '/'
+                    && src.charAt(pos + 1) == '*') {
+
+                pos += 2;
+                boolean closed = false;
+
+                while (pos + 1 < src.length()) {
+                    if (src.charAt(pos) == '*'
+                            && src.charAt(pos + 1) == '/') {
+                        pos += 2;
+                        closed = true;
+                        break;
+                    }
+
+                    if (src.charAt(pos) == '\n') {
+                        line++;
+                    }
+
+                    pos++;
+                }
+
+                if (!closed) {
+                    throw new RuntimeException(
+                        "Comentario de bloco nao fechado, linha " + line
+                    );
+                }
+
+                skipping = true;
             }
         }
+    }
+
+    private boolean isLetter(char c) {
+        return (c >= 'a' && c <= 'z')
+                || (c >= 'A' && c <= 'Z');
+    }
+
+    private boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
+    }
+
+    private boolean isIdentifierPart(char c) {
+        return isLetter(c) || isDigit(c) || c == '_';
     }
 }
