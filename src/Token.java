@@ -1,7 +1,8 @@
+
 public class Token {
-    public final String type;    // "identifier", etc.
-    public final String lexeme;  // o texto reconhecido
-    public final int line;       // linha onde o token começou
+    public final String type;
+    public final String lexeme;
+    public final int line;
 
     public Token(String type, String lexeme, int line) {
         this.type = type;
@@ -9,8 +10,14 @@ public class Token {
         this.line = line;
     }
 
-    @Override
-    public String toString() {
-        return "<" + type + "> " + lexeme + " </" + type + ">";
+    public String toXml() {
+        return "<" + type + "> " + escapeXml(lexeme)
+                + " </" + type + ">";
+    }
+
+    private String escapeXml(String text) {
+        return text.replace("&", "&amp;")
+                   .replace("<", "&lt;")
+                   .replace(">", "&gt;");
     }
 }
