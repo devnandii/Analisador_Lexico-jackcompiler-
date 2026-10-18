@@ -34,11 +34,44 @@ public class CompilationEngine {
         consume(TokenType.IDENTIFIER, "className");
         consume(TokenType.SYMBOL, "{");
 
-        // Próximos passos (ficarão em loop):
-        // compileClassVarDec();
-        // compileSubroutineDec();
+        // Loop para ler todas as variáveis estáticas/fields
+        while (match(TokenType.KEYWORD, "static") || match(TokenType.KEYWORD, "field")) {
+            compileClassVarDec();
+        }
 
+        // Próximo passo: compileSubroutineDec();
+        
         consume(TokenType.SYMBOL, "}");
         xml.closeTag("class");
+    }
+
+        public void compileClassVarDec() {
+        xml.openTag("classVarDec");
+        
+        // Pode ser 'static' ou 'field'
+        if (match(TokenType.KEYWORD, "static") || match(TokenType.KEYWORD, "field")) {
+            consume(TokenType.KEYWORD, "keyword");
+        } else {
+            throw new RuntimeException("Esperado static ou field");
+        }
+
+        // Tipo da variável (int, char, boolean ou className)
+        if (match(TokenType.KEYWORD, "int") || match(TokenType.KEYWORD, "char") || match(TokenType.KEYWORD, "boolean")) {
+            consume(TokenType.KEYWORD, "type");
+        } else {
+            consume(TokenType.IDENTIFIER, "type (className)");
+        }
+
+        // Nome da variável
+        consume(TokenType.IDENTIFIER, "varName");
+
+        // Pode ter mais variáveis separadas por vírgula (ex: int x, y, z;)
+        while (match(TokenType.SYMBOL, ",")) {
+            consume(TokenType.SYMBOL, ",");
+            consume(TokenType.IDENTIFIER, "varName");
+        }
+
+        consume(TokenType.SYMBOL, ";");
+        xml.closeTag("classVarDec");
     }
 }
