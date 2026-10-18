@@ -1,4 +1,3 @@
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -22,6 +21,9 @@ public class JackTokenizer {
     private int pos;
     private int line;
 
+    // Guarda o token atual, que o Parser vai ler
+    private Token currentToken;
+
     public JackTokenizer(String filePath) throws IOException {
         this.src = new String(
             Files.readAllBytes(Paths.get(filePath)),
@@ -29,13 +31,41 @@ public class JackTokenizer {
         );
         this.pos = 0;
         this.line = 1;
+        // Carrega o primeiro token ao criar o objeto
+        this.currentToken = readNextToken();
     }
 
-    public Token nextToken() {
+    /**
+     * Retorna o token atual sem avançar.
+     */
+    public Token peek() {
+        return currentToken;
+    }
+
+    /**
+     * Avança para o próximo token, descartando o atual.
+     */
+    public void advance() {
+        currentToken = readNextToken();
+    }
+
+    /**
+     * Retorna o tipo do token atual (ou EOF se for null).
+     */
+    public TokenType tokenType() {
+        if (currentToken == null) return TokenType.EOF;
+        return currentToken.type;
+    }
+
+    // ==========================================================
+    // Leitura de baixo nível (lexer)
+    // ==========================================================
+
+    private Token readNextToken() {
         skipWhitespaceAndComments();
 
         if (pos >= src.length()) {
-            return null;
+            return null; // Fim do arquivo
         }
 
         char c = src.charAt(pos);
@@ -44,7 +74,8 @@ public class JackTokenizer {
             return number();
         }
 
-        if (isLetter(c)) {
+        // Correção do bug: '_' aceito como início
+        if (isLetter(c) || c == '_') {
             return identifier();
         }
 
@@ -54,7 +85,7 @@ public class JackTokenizer {
 
         if (SYMBOLS.contains(c)) {
             pos++;
-            return new Token("symbol", String.valueOf(c), line);
+            return new Token(TokenType.SYMBOL, String.valueOf(c), line);
         }
 
         throw new RuntimeException(
@@ -73,7 +104,6 @@ public class JackTokenizer {
 
         try {
             long value = Long.parseLong(lexeme);
-
             if (value > 32767) {
                 throw new RuntimeException(
                     "Inteiro fora do intervalo 0 a 32767 na linha "
@@ -86,12 +116,12 @@ public class JackTokenizer {
             );
         }
 
-        return new Token("integerConstant", lexeme, line);
+        return new Token(TokenType.INT_CONST, lexeme, line);
     }
 
     private Token identifier() {
         int start = pos;
-        pos++;
+        pos++; // consome o primeiro caractere
 
         while (pos < src.length() && isIdentifierPart(src.charAt(pos))) {
             pos++;
@@ -99,9 +129,9 @@ public class JackTokenizer {
 
         String lexeme = src.substring(start, pos);
 
-        String type = KEYWORDS.contains(lexeme)
-                ? "keyword"
-                : "identifier";
+        TokenType type = KEYWORDS.contains(lexeme)
+                ? TokenType.KEYWORD
+                : TokenType.IDENTIFIER;
 
         return new Token(type, lexeme, line);
     }
@@ -134,7 +164,7 @@ public class JackTokenizer {
         String lexeme = src.substring(start, pos);
         pos++; // Aspas de fechamento
 
-        return new Token("stringConstant", lexeme, startLine);
+        return new Token(TokenType.STRING_CONST, lexeme, startLine);
     }
 
     private void skipWhitespaceAndComments() {

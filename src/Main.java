@@ -38,8 +38,10 @@ public class Main {
             xml.append("<tokens>\n");
 
             Token token;
-            while ((token = tokenizer.nextToken()) != null) {
+            while (tokenizer.peek() != null) {
+                token = tokenizer.peek();
                 xml.append(token.toXml()).append("\n");
+                tokenizer.advance();
             }
 
             xml.append("</tokens>\n");

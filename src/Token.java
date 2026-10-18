@@ -1,23 +1,31 @@
-
 public class Token {
-    public final String type;
+    public final TokenType type;
     public final String lexeme;
     public final int line;
 
-    public Token(String type, String lexeme, int line) {
+    public Token(TokenType type, String lexeme, int line) {
         this.type = type;
         this.lexeme = lexeme;
         this.line = line;
     }
 
     public String toXml() {
-        return "<" + type + "> " + escapeXml(lexeme)
-                + " </" + type + ">";
+        String tag;
+        switch (type) {
+            case KEYWORD:        tag = "keyword"; break;
+            case SYMBOL:         tag = "symbol"; break;
+            case IDENTIFIER:     tag = "identifier"; break;
+            case INT_CONST:      tag = "integerConstant"; break;
+            case STRING_CONST:   tag = "stringConstant"; break;
+            default:             tag = "unknown"; break;
+        }
+        return "<" + tag + "> " + escapeXml(lexeme) + " </" + tag + ">";
     }
 
     private String escapeXml(String text) {
         return text.replace("&", "&amp;")
                    .replace("<", "&lt;")
-                   .replace(">", "&gt;");
+                   .replace(">", "&gt;")
+                   .replace("\"", "&quot;"); // Adicionado o escape de aspas
     }
 }
