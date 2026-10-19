@@ -144,8 +144,43 @@ public class CompilationEngine {
 
     public void compileSubroutineBody() {
         xml.openTag("subroutineBody");
-        consume(TokenType.SYMBOL, "{");        
+        consume(TokenType.SYMBOL, "{");
+
+        // Loop para ler todas as variáveis locais
+        while (match(TokenType.KEYWORD, "var")) {
+            compileVarDec();
+        }
+
+        // Aqui virá o compileStatements() futuramente
+
         consume(TokenType.SYMBOL, "}");
         xml.closeTag("subroutineBody");
     }
+
+        public void compileVarDec() {
+        xml.openTag("varDec");
+        
+        consume(TokenType.KEYWORD, "var");
+
+        // Tipo da variável (int, char, boolean ou className)
+        if (match(TokenType.KEYWORD, "int") || match(TokenType.KEYWORD, "char") || match(TokenType.KEYWORD, "boolean")) {
+            consume(TokenType.KEYWORD, "type");
+        } else {
+            consume(TokenType.IDENTIFIER, "type (className)");
+        }
+
+        // Nome da variável
+        consume(TokenType.IDENTIFIER, "varName");
+
+        // Pode ter mais variáveis separadas por vírgula (ex: var int x, y, z;)
+        while (match(TokenType.SYMBOL, ",")) {
+            consume(TokenType.SYMBOL, ",");
+            consume(TokenType.IDENTIFIER, "varName");
+        }
+
+        consume(TokenType.SYMBOL, ";");
+        xml.closeTag("varDec");
+    }
+
+    
 }
