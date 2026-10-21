@@ -1,107 +1,80 @@
 # Analisador Léxico da Linguagem Jack
 
-<p align="center"> <img src="analisador_lexico_animado.gif" alt="Animação demonstrando o funcionamento do analisador léxico" width="800"> </p>
+    
+<p align="center">
+  <img src="analisador_lexico_animado.gif" alt="Analisador Léxico" width="48%">  
+  <img src="Sintatico.png" alt="Analisador Sintático" width="48%">
+</p>
 
-## 1. Integrantes
+## Integrantes
 
-* **Irlanda Hildeney Oliveira Teixeira**
-* **Isaque Mendonça Costa**
+* **Irlanda Hildeney Oliveira Teixeira - 20250013345**
+* **Isaque Mendonça Costa - 20250042641**
 
 **Disciplina:** Compiladores
 
-## 2. Descrição do projeto
+## Descrição do projeto
 
-Este projeto implementa um analisador léxico para a linguagem Jack, desenvolvido em Java.
+O projeto é dividido em duas etapas principais:
+1. **Analisador Léxico (Lexer):** Lê o código-fonte de um arquivo `.jack`, ignora espaços e comentários, e classifica os elementos da linguagem em tokens (keywords, symbols, integerConstant, stringConstant, identifier).
+2. **Analisador Sintático (Parser):** Consome a sequência de tokens gerada pelo Lexer, valida a conformidade com a gramática da linguagem Jack e gera a árvore de análise sintática no formato XML, compatível com o validador oficial do nand2tetris.
 
-O analisador léxico é responsável por ler o código-fonte de um arquivo `.jack`, identificar os elementos que compõem a linguagem e classificá-los em tokens. Ao final do processamento, os tokens identificados são organizados e armazenados em um arquivo XML.
+## ⚙️ Tecnologias Utilizadas
 
-## 3. Funcionalidades
+* **Linguagem:** Java (JDK 11 ou superior)
+* **Testes Automatizados:** JUnit 5 (Platform Console Standalone)
+* **Formato de Saída:** XML
 
-O programa realiza as seguintes operações:
-
-* Identificação de palavras reservadas (*keywords*).
-* Identificação de símbolos da linguagem (*symbols*).
-* Identificação de constantes inteiras (*integer constants*).
-* Identificação de constantes de texto (*string constants*).
-* Identificação de nomes e variáveis (*identifiers*).
-* Ignora espaços em branco e comentários de linha (`//`) e de bloco (`/* ... */`).
-* Geração de um arquivo XML contendo os tokens identificados.
-* Verificação de erros léxicos, como números inteiros fora do intervalo permitido e strings ou comentários de bloco não terminados.
-
-## 4. Tecnologias utilizadas
-
-* **Linguagem de programação:** Java.
-* **Formato de saída:** XML.
-
-
-## 5. Estrutura do projeto
+## 📁 Estrutura do Projeto
 
 ```text
-Analisador_Lexico-jackcompiler/
+Analisador_Lexico-jackcompiler-/
+├── lib/
+│   └── junit-platform-console-standalone-1.12.0.jar
 ├── src/
 │   ├── JackTokenizer.java
-│   ├── Main.java
-│   └── Token.java
+│   ├── Token.java
+│   ├── TokenType.java
+│   ├── XmlWriter.java
+│   ├── CompilationEngine.java
+│   ├── ParserTest.java
+│   └── Main.java
 ├── test/
-│   ├── expected_xml/
-│   │   ├── MainT.xml
-│   │   ├── SquareT.xml
-│   │   └── SquareGameT.xml
-│   └── jack_files/
-│       ├── Main.jack
-│       ├── Square.jack
-│       └── SquareGame.jack
-├── .gitignore
+│   ├── expected_xml/   (Gabaritos oficiais do nand2tetris)
+│   ├── generated/      (Saídas geradas pelo nosso Parser)
+│   └── jack_files/     (Códigos-fonte Jack para teste)
 └── README.md
 ```
 
-## 6. Como compilar
-
-É necessário ter o JDK instalado e configurado no sistema.
-
-Na pasta principal do projeto, execute:
-
-```bash
+## 🚀 Como Compilar e Executar
+```
 javac -encoding UTF-8 src/*.java
 ```
-
-
-## 7. Como executar
-
-O programa recebe o caminho do arquivo `.jack` como primeiro argumento e, opcionalmente, o caminho do arquivo XML de saída como segundo argumento.
-
-**Exemplo:**
-
-```powershell
-java -cp src Main .\test\jack_files\Main.jack .\test\generated\MainT.xml
+Para rodar o compilador em um arquivo Jack:
+```
+java -cp src Main test/jack_files/Main.jack test/generated/Main.xml
 ```
 
-Para executar com outro arquivo:
 
-```powershell
-java -cp src Main .\test\jack_files\Square.jack .\test\generated\SquareT.xml
+## 🧪 Estratégia de Testes Automatizados
+
+O teste compara a saída gerada pelo nosso Parser com os arquivos oficiais do nand2tetris, ignorando diferenças de espaçamento.
+
+```
+javac -encoding UTF-8 -cp "lib/junit-platform-console-standalone-1.12.0.jar;src" src/*.java
+
+java -jar lib/junit-platform-console-standalone-1.12.0.jar --class-path src --scan-class-path
 ```
 
-```powershell
-java -cp src Main .\test\jack_files\SquareGame.jack .\test\generated\SquareGameT.xml
-```
 
-Caso o caminho de saída não seja informado, o programa gera automaticamente um arquivo XML com o sufixo `T.xml` no diretório do arquivo de entrada.
+## Funcionalidades
 
-## 8. Estratégia de testes
+O programa realiza as seguintes operações:
 
-Os testes foram realizados utilizando os arquivos de código-fonte Jack disponibilizados para a atividade e seus respectivos arquivos XML de referência.
+- Identificação de keywords, símbolos, inteiros, strings e identificadores.
+- Tratamento de erros léxicos e sintáticos (com indicação exata da linha).
+- Geração de arquivo XML compatível com o validador oficial do nand2tetris.
+- Métodos de lookahead no Parser (peek(), advance(), match(), consume()).
+- Testes automatizados com JUnit 5 para validação da árvore
 
-Foram executadas as seguintes verificações:
 
-1. Compilação das classes Java.
-2. Execução do analisador sobre `Main.jack`, `Square.jack` e `SquareGame.jack`.
-3. Comparação dos arquivos XML gerados com os arquivos XML de referência.
-4. Teste com um arquivo Jack contendo palavras reservadas, identificadores, símbolos, números inteiros e constantes de texto.
-5. Teste de entrada inválida com uma constante inteira fora do intervalo permitido, verificando a emissão de uma mensagem de erro.
-
-Os três arquivos XML gerados foram comparados com os arquivos de referência, sem diferenças identificadas. O teste com o inteiro `32768` também apresentou a mensagem de erro esperada.
-
-## 9. Conclusão
-
-O projeto implementa as funcionalidades de um analisador léxico para a linguagem Jack, identificando e classificando tokens, ignorando espaços e comentários, gerando arquivos XML e sinalizando entradas inválidas. Os testes realizados demonstraram o funcionamento esperado para os arquivos de referência utilizados.

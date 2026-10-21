@@ -35,23 +35,21 @@ public class JackTokenizer {
         this.currentToken = readNextToken();
     }
 
-    /**
-     * Retorna o token atual sem avançar.
-     */
+    
+     //Retorna o token atual sem avançar.
+    
     public Token peek() {
         return currentToken;
     }
 
-    /**
-     * Avança para o próximo token, descartando o atual.
-     */
+    
+     //Avança para o próximo token, descartando o atual.
     public void advance() {
         currentToken = readNextToken();
     }
 
-    /**
-     * Retorna o tipo do token atual (ou EOF se for null).
-     */
+    // Retorna o tipo do token atual (ou EOF se for null).
+    
     public TokenType tokenType() {
         if (currentToken == null) return TokenType.EOF;
         return currentToken.type;

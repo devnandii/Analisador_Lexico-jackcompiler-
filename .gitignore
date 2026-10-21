@@ -1,3 +1,4 @@
 bin/
 *.class
 test/jack_files/temp.jack
+test/generated/
