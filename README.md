@@ -1,4 +1,4 @@
-# Analisador Léxico da Linguagem Jack
+# Analisador Léxico e Sintático da Linguagem Jack
 
     
 <p align="center">
