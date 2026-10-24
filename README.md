@@ -21,8 +21,8 @@ O projeto é dividido em duas etapas principais:
 
 ## ⚙️ Tecnologias Utilizadas
 
-* **Linguagem:** Java (JDK 11 ou superior)
-* **Testes Automatizados:** JUnit 5 (Platform Console Standalone)
+* **Linguagem:** Java 
+* **Testes Automatizados:** JUnit 5 
 * **Formato de Saída:** XML
 
 ## 📁 Estrutura do Projeto
