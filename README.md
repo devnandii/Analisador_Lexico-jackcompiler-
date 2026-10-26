@@ -40,9 +40,9 @@ Analisador_Lexico-jackcompiler-/
 │   ├── ParserTest.java
 │   └── Main.java
 ├── test/
-│   ├── expected_xml/   (Gabaritos oficiais do nand2tetris)
-│   ├── generated/      (Saídas geradas pelo nosso Parser)
-│   └── jack_files/     (Códigos-fonte Jack para teste)
+│   ├── expected_xml/   
+│   ├── generated/      
+│   └── jack_files/     
 └── README.md
 ```
 
