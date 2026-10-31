@@ -1,4 +1,14 @@
+# Código-fonte compilado e saídas geradas
 bin/
+output/
 *.class
-test/jack_files/temp.jack
-test/generated/
+
+# JUnit baixado localmente (ver lib/README.md)
+lib/*.jar
+
+# IDEs e sistema
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db

@@ -30,7 +30,11 @@ public class XmlWriter {
     }
 
     public void saveToFile(String filePath) throws IOException {
-        Files.writeString(Path.of(filePath), xml.toString(), StandardCharsets.UTF_8);
+        Path path = Path.of(filePath);
+        if (path.getParent() != null) {
+            Files.createDirectories(path.getParent());
+        }
+        Files.writeString(path, xml.toString(), StandardCharsets.UTF_8);
     }
 
     private void appendIndent() {
